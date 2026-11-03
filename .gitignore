@@ -1,2 +1,7 @@
+# OS Metadata
 .DS_Store
 Thumbs.db
+
+# Node dependencies (if using local tooling)
+node_modules/
+npm-debug.log

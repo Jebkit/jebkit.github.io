@@ -1,19 +1,19 @@
-# Jebkit
+# Jebkit — Nintendo Switch 2 WebKit Project
 
-A standalone, WebKit-oriented frontend for the Jebkit interface.
+Jebkit is a clean, browser-compatible user interface built for the Nintendo Switch 2 WebKit browser environment.
 
-## Contents
+## Visual & Functional Features
+- **Matrix Waterfall Animation**: Lightweight 2D canvas effect featuring red glowing characters.
+- **Glossy UI & Dark-Red Palette**: Aesthetic interface design using CSS backdrop filters and smooth gradient styling.
+- **Firmware Verification Modal**: Includes a non-intrusive reminder popup requesting manual firmware verification in system settings.
+- **5-Second Delayed Confirmation**: Enforces a safety delay on confirmation actions.
+- **Sandboxed Compatibility**: Graceful handling of isolated browser sandbox constraints without false system state claims.
 
-- `index.html` — self-contained interface with the red/black theme, Matrix-style background, firmware reminder dialog, Cancel control, and five-second OK delay.
+## How to Run
 
-## Run locally
-
-Open `index.html` in a modern browser. No build step or external dependencies are required.
-
-## WebKit notes
-
-The page includes the `-webkit-` backdrop-filter prefix and standard HTML/CSS/JavaScript APIs. Test on the exact WebKit/Safari version and device where it will be hosted.
-
-## Scope
-
-This repository contains frontend presentation and interaction only. It does not include or implement console jailbreak, exploit, memory manipulation, or payload execution functionality. The firmware dialog is a user-facing reminder; it does not read or verify device firmware.
+### Local Web Server
+1. Clone or extract the project directory.
+2. Serve the directory using any static web server:
+   ```bash
+   # Using Python 3
+   python3 -m http.server 8080

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEBKIT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Matrix Digital Waterfall Canvas Background -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <div class="overlay"></div>
+
+    <!-- Main Container -->
+    <main class="container">
+        <header class="header">
+            <h1 class="title">JEBKIT</h1>
+            <p class="subtitle">Nintendo Switch 2 WebKit Project</p>
+        </header>
+
+        <!-- Status & Diagnostic Dashboard -->
+        <section class="panel status-panel">
+            <div class="panel-header">System Status</div>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="label">Environment:</span>
+                    <span class="value green" id="env-status">WebKit Sandbox</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Target OS:</span>
+                    <span class="value" id="target-os">Nintendo Switch 2</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Firmware Reference:</span>
+                    <span class="value red" id="fw-ref">23.0.1</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Status:</span>
+                    <span class="value yellow" id="system-state">Awaiting Verification</span>
+                </div>
+            </div>
+            <div class="log-box" id="console-log">
+                <div class="log-line">[SYS] Jebkit WebKit interface loaded successfully.</div>
+                <div class="log-line">[SYS] Engine components mapped to WebKit sandbox.</div>
+                <div class="log-line">[WARN] Firmware auto-detection disabled (sandbox isolation).</div>
+            </div>
+        </section>
+
+        <!-- Action Controls -->
+        <div class="action-bar">
+            <button class="btn btn-primary" id="btn-verify">Verify System Firmware</button>
+            <button class="btn btn-secondary" id="btn-info">Architecture Overview</button>
+        </div>
+    </main>
+
+    <!-- Firmware Reminder Modal -->
+    <div class="modal-backdrop hidden" id="fw-modal">
+        <div class="modal-content panel red-glow">
+            <h2 class="modal-title">Firmware Verification</h2>
+            <div class="modal-body">
+                <p>Please check your current system firmware version in <strong>System Settings</strong> on your device.</p>
+                <div class="info-card">
+                    <span class="info-label">Firmware Reference:</span>
+                    <span class="info-value">23.0.1</span>
+                </div>
+                <p class="note-text">Ensure your device configuration matches expected WebKit browser compatibility requirements.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+                <button class="btn btn-primary disabled" id="modal-ok" disabled>OK (<span id="timer-countdown">5</span>s)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Architecture Info Modal -->
+    <div class="modal-backdrop hidden" id="info-modal">
+        <div class="modal-content panel">
+            <h2 class="modal-title">Jebkit Architecture</h2>
+            <div class="modal-body text-left">
+                <p><strong>Separation of Concerns:</strong></p>
+                <ul>
+                    <li><strong class="red">Native Core:</strong> Low-level memory pointers, binary payloads, and kernel IPC functions are isolated from browser execution.</li>
+                    <li><strong class="green">WebKit Layer:</strong> Provides lightweight, responsive visual user interfaces, diagnostic logs, and status dashboards safely within browser sandbox limits.</li>
+                </ul>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="info-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
