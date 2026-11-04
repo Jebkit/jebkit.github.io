@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080000">
+<title>JEBKIT V2 — Switch 2 WebView</title>
+<style>
+:root{color-scheme:dark;--red:#ff2929;--panel:rgba(17,0,0,.95);--muted:#bd7777}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body{min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:18px;overflow-x:hidden;background:#050000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+#matrix{position:fixed;inset:0;width:100%;height:100%;z-index:-2}.vignette{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 15%,rgba(0,0,0,.84) 100%)}
+@keyframes rgbCycle{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}\n.panel{animation:rgbCycle 8s linear infinite;position:relative;isolation:isolate;width:min(100%,560px);max-height:94svh;overflow:auto;padding:30px 24px 22px;text-align:center;border:1px solid rgba(255,55,55,.72);border-radius:15px;background:linear-gradient(145deg,rgba(66,0,0,.97),rgba(9,0,0,.98) 58%,rgba(38,0,0,.97));box-shadow:0 0 38px rgba(255,0,0,.25),inset 0 1px 2px rgba(255,255,255,.2)}
+.panel:before{content:"";position:absolute;z-index:-1;inset:0 0 auto;height:48%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.13),transparent)}
+h1{margin:0;color:#ff3333;font-size:clamp(40px,11vw,58px);letter-spacing:.16em;text-indent:.16em;text-shadow:0 0 10px #f00,0 0 30px #900}
+.subtitle{margin:10px 0 22px;color:#d65a5a;font-size:11px;letter-spacing:.28em}
+.status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 15px;padding:11px 12px;border:1px solid #6d1717;border-radius:7px;background:rgba(0,0,0,.35);text-align:left;font-size:11px}
+.status strong{color:#ff6666;letter-spacing:.12em}
+.dot{display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:#777;box-shadow:0 0 8px currentColor}.dot.ready{background:#54d68a;color:#54d68a}.dot.busy{background:#ffc45b;color:#ffc45b}.dot.error{background:#ff4141;color:#ff4141}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+button{appearance:none;-webkit-appearance:none;border:1px solid #ff6262;border-radius:7px;padding:14px 12px;color:#fff;font:700 12px/1.2 inherit;font-family:inherit;letter-spacing:.1em;cursor:pointer;background:linear-gradient(180deg,#ff4949,#c90000 48%,#710000);box-shadow:0 4px 0 #410000,0 0 18px rgba(255,0,0,.2),inset 0 1px 2px rgba(255,255,255,.45)}
+button:active:not(:disabled){transform:translateY(2px)}button:disabled{opacity:.4;filter:grayscale(.7);cursor:not-allowed;box-shadow:none}
+.secondary{border-color:#777;background:linear-gradient(180deg,#555,#191919);box-shadow:0 4px 0 #080808,inset 0 1px 2px rgba(255,255,255,.25)}
+.stop{border-color:#a33;background:linear-gradient(180deg,#5a1717,#250707);box-shadow:0 4px 0 #100}
+.field{text-align:left;margin:12px 0}.field label{display:block;margin:0 0 6px;color:#d77;font-size:10px;letter-spacing:.15em}
+input{width:100%;min-height:42px;padding:10px 12px;border:1px solid #702020;border-radius:6px;background:#100707;color:#fff;font:12px inherit;font-family:inherit;outline:none}
+input:focus{border-color:#f55;box-shadow:0 0 0 2px #f3323233}
+.hint{margin:7px 0 0;color:#a66;font-size:10px;line-height:1.5}
+.log-wrap{margin-top:18px;text-align:left}.log-title{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;color:#d77;font-size:10px;letter-spacing:.16em}
+#log{height:155px;overflow:auto;padding:11px;border:1px solid #581616;border-radius:7px;background:rgba(0,0,0,.62);color:#e7baba;font-size:10px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.footer{margin-top:16px;color:#a44;font-size:9px;letter-spacing:.16em}
+.note{margin:12px 0 0;color:#b77;font-size:10px;line-height:1.55}
+@media(max-width:390px){.panel{padding:25px 16px 18px}.controls{gap:8px}button{padding:13px 8px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="matrix" aria-hidden="true"></canvas><div class="vignette" aria-hidden="true"></div>
+<main class="panel">
+  <h1>JEBKIT V2</h1>
+  <div class="subtitle">SWITCH 2 WEBVIEW INTERFACE</div>
+  <div class="status"><span><i class="dot" id="statusDot"></i><span id="statusText">IDLE — NOT INITIALIZED</span></span><strong id="phaseText">PHASE 0</strong></div>
+
+  <div class="field">
+    <label for="host">HOST ADDRESS</label>
+    <input id="host" type="text" value="127.0.0.1" inputmode="url" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="field">
+    <label for="port">WEBSOCKET PORT</label>
+    <input id="port" type="number" min="1" max="65535" value="8765" inputmode="numeric">
+    <p class="hint">Enter the address and port of a companion WebSocket service on your network. This page does not discover or access Switch system memory.</p>
+  </div>
+
+  <div class="controls">
+    <button id="bootButton" type="button">1 · BOOT</button>
+    <button id="startButton" type="button" disabled>2 · START / CONNECT</button>
+    <button id="pingButton" class="secondary" type="button" disabled>SEND PING</button>
+    <button id="stopButton" class="stop" type="button" disabled>STOP</button>
+  </div>
+
+  <div class="log-wrap">
+    <div class="log-title"><span>BOOT / RPC CONSOLE</span><span id="connectionText">OFFLINE</span></div>
+    <div id="log" role="log" aria-live="polite">JEBKIT WEBVIEW PORT
+Browser-safe mode.
+Press BOOT to initialize the local simulation.</div>
+  </div>
+  <p class="note">WebView implementation: BOOT validates a browser-side test buffer. START opens a WebSocket connection. Only simple status/ping messages are supported; native Switch calls and the original memory patching are not performed.</p>
+  <div class="footer">JEBKIT V2 · RGB WEBKIT BUILD</div>
+</main>
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+var phase=0, socket=null, memory=null, pingTimer=null;
+var log=$("log"), statusText=$("statusText"), phaseText=$("phaseText"), dot=$("statusDot"), connectionText=$("connectionText");
+
+function write(message){
+  var stamp=new Date().toLocaleTimeString();
+  log.textContent+="\n["+stamp+"] "+message;
+  log.scrollTop=log.scrollHeight;
+}
+function setStatus(label,state,number){
+  statusText.textContent=label; dot.className="dot"+(state?" "+state:""); phaseText.textContent="PHASE "+number;
+}
+function setButtons(){
+  $("bootButton").disabled=phase!==0;
+  $("startButton").disabled=phase!==2;
+  $("pingButton").disabled=phase!==4;
+  $("stopButton").disabled=!(phase===3||phase===4);
+}
+function fail(message){
+  write("BOOT FAILED: "+message); setStatus("ERROR — "+message,"error",-1);
+  phase=-1; setButtons();
+}
+function reset(){
+  if(pingTimer){clearInterval(pingTimer);pingTimer=null;}
+  if(socket){try{socket.close();}catch(e){}socket=null;}
+  memory=null;phase=0;connectionText.textContent="OFFLINE";
+  setStatus("IDLE — NOT INITIALIZED","",0);setButtons();
+}
+function customHash(bytes){
+  var h=0;
+  for(var i=0;i<bytes.length;i++){h=(Math.imul(h,65599)+bytes[i])>>>0;}
+  return h;
+}
+function boot(){
+  if(phase!==0)return;
+  phase=1;setStatus("INITIALIZING BROWSER RUNTIME","busy",1);setButtons();
+  write("BOOT: initializing WebView-safe runtime");
+  try{
+    memory=new ArrayBuffer(4096);
+    var view=new DataView(memory);
+    view.setUint32(0,0x4A45424B,true);
+    view.setUint32(4,1,true);
+    view.setUint32(8,memory.byteLength,true);
+    var bytes=new Uint8Array(memory,0,12);
+    var hash=customHash(bytes);
+    if(view.getUint32(0,true)!==0x4A45424B)throw new Error("test-buffer signature mismatch");
+    if(view.getUint32(8,true)!==4096)throw new Error("test-buffer length mismatch");
+    if(!Number.isFinite(hash))throw new Error("integrity check failed");
+    write("BOOT: browser APIs available");
+    write("BOOT: test buffer allocated ("+memory.byteLength+" bytes)");
+    write("BOOT: simulated integrity check passed (hash "+hash+")");
+    write("BOOT OK — no native memory was accessed");
+    phase=2;setStatus("BOOT OK — READY TO CONNECT","ready",2);setButtons();
+  }catch(e){fail(e.message||"initialization error");}
+}
+function start(){
+  if(phase!==2)return;
+  var host=$("host").value.trim(), port=Number($("port").value);
+  if(!host){write("START: enter a host address");return;}
+  if(!Number.isInteger(port)||port<1||port>65535){write("START: port must be 1–65535");return;}
+  phase=3;setStatus("CONNECTING TO HOST","busy",3);connectionText.textContent="CONNECTING";setButtons();
+  var url="ws://"+host.replace(/^ws:\/\//i,"").replace(/\/+$/,"")+":"+port;
+  write("START: opening "+url);
+  try{socket=new WebSocket(url);}catch(e){fail("WebSocket could not be created");connectionText.textContent="OFFLINE";return;}
+  socket.onopen=function(){
+    if(phase!==3)return;
+    phase=4;connectionText.textContent="CONNECTED";setStatus("HOST CONNECTED","ready",4);setButtons();
+    write("HOST CONNECTED");
+    socket.send(JSON.stringify({type:"JEBKIT_HELLO",version:1,client:"Switch 2 WebView",capabilities:["ping","status"]}));
+    write("HELLO sent");
+  };
+  socket.onmessage=function(event){
+    var data=String(event.data);
+    try{
+      var msg=JSON.parse(data);
+      if(msg.type==="PONG")write("RPC: PONG received"+(msg.message?" — "+String(msg.message).slice(0,120):""));
+      else if(msg.type==="STATUS")write("HOST STATUS: "+JSON.stringify(msg).slice(0,240));
+      else write("HOST MESSAGE: "+JSON.stringify(msg).slice(0,240));
+    }catch(e){write("HOST TEXT: "+data.slice(0,240));}
+  };
+  socket.onerror=function(){write("WebSocket error — check host, port, network and service.");};
+  socket.onclose=function(){write("HOST DISCONNECTED");socket=null;if(pingTimer){clearInterval(pingTimer);pingTimer=null;}phase=2;connectionText.textContent="OFFLINE";setStatus("BOOT OK — HOST DISCONNECTED","",2);setButtons();};
+}
+function ping(){
+  if(phase!==4||!socket||socket.readyState!==WebSocket.OPEN)return;
+  socket.send(JSON.stringify({type:"PING",timestamp:Date.now()}));write("RPC: PING sent");
+}
+function stop(){
+  write("STOP: closing host connection");
+  if(socket){var old=socket;socket=null;old.close();}
+  if(pingTimer){clearInterval(pingTimer);pingTimer=null;}
+  phase=2;connectionText.textContent="OFFLINE";setStatus("BOOT OK — STOPPED","",2);setButtons();
+}
+$("bootButton").addEventListener("click",boot);
+$("startButton").addEventListener("click",start);
+$("pingButton").addEventListener("click",ping);
+$("stopButton").addEventListener("click",stop);
+
+/* Decorative Matrix background */
+var canvas=$("matrix"),ctx=canvas.getContext("2d"),glyphs="01アイウエオカキクケコ",drops=[],reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches,raf=null;
+function resize(){
+  var dpr=Math.min(window.devicePixelRatio||1,2),w=window.innerWidth,h=window.innerHeight;
+  canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);canvas.style.width=w+"px";canvas.style.height=h+"px";ctx.setTransform(dpr,0,0,dpr,0,0);
+  drops=[];for(var i=0;i<Math.ceil(w/16);i++)drops.push(Math.random()*-35);
+}
+function draw(){
+  var w=window.innerWidth,h=window.innerHeight;ctx.fillStyle="rgba(5,0,0,.10)";ctx.fillRect(0,0,w,h);ctx.font="16px monospace";
+  for(var i=0;i<drops.length;i++){var y=drops[i];var hue=(Date.now()/30+i*7)%360;ctx.fillStyle="hsl("+hue+",100%,"+(Math.random()>.97?"75%":"50%")+")";ctx.fillText(glyphs.charAt(Math.floor(Math.random()*glyphs.length)),i*16,y*16);if(y*16>h&&Math.random()>.975)drops[i]=0;else drops[i]++;}
+  if(!reduce)raf=requestAnimationFrame(draw);
+}
+resize();if(!reduce)raf=requestAnimationFrame(draw);else draw();
+window.addEventListener("resize",resize);
+window.addEventListener("pagehide",function(){if(raf!==null)cancelAnimationFrame(raf);if(socket){try{socket.close();}catch(e){}}});
+setButtons();
+}());
+</script>
+</body>
+</html>
