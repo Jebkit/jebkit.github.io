@@ -1,95 +1,413 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JEBKIT</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050505">
+<title>JEBKIT V2</title>
+
+<style>
+:root {
+    --rgb: rgb(255, 0, 0);
+    --bg: #050505;
+    --panel: rgba(0, 0, 0, 0.88);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: white;
+    font-family: monospace;
+    overflow-x: hidden;
+}
+
+#matrix {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.45;
+}
+
+.container {
+    width: min(92%, 700px);
+    margin: 35px auto;
+    padding: 24px;
+    background: var(--panel);
+    border: 1px solid var(--rgb);
+    box-shadow: 0 0 18px var(--rgb);
+    border-radius: 8px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 36px;
+    letter-spacing: 5px;
+    color: var(--rgb);
+    text-shadow: 0 0 12px var(--rgb);
+}
+
+.subtitle {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin: 14px 0 6px;
+    color: var(--rgb);
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    background: #080808;
+    color: white;
+    border: 1px solid var(--rgb);
+    outline: none;
+    font-family: monospace;
+}
+
+button {
+    padding: 12px 18px;
+    margin: 7px 4px 7px 0;
+    background: #080808;
+    color: var(--rgb);
+    border: 1px solid var(--rgb);
+    cursor: pointer;
+    font-family: monospace;
+    font-weight: bold;
+    transition: 0.2s;
+    box-shadow: 0 0 7px var(--rgb);
+}
+
+button:hover {
+    background: var(--rgb);
+    color: black;
+    box-shadow: 0 0 20px var(--rgb);
+}
+
+.buttons {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.status {
+    margin-top: 20px;
+    padding: 12px;
+    border: 1px solid var(--rgb);
+    color: var(--rgb);
+}
+
+#console {
+    height: 220px;
+    overflow-y: auto;
+    margin-top: 15px;
+    padding: 12px;
+    background: #020202;
+    border: 1px solid var(--rgb);
+    color: #ddd;
+    font-size: 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.footer {
+    text-align: center;
+    color: #777;
+    font-size: 11px;
+    margin-top: 20px;
+}
+</style>
 </head>
+
 <body>
-    <!-- Matrix Digital Waterfall Canvas Background -->
-    <canvas id="matrix-canvas"></canvas>
 
-    <div class="overlay"></div>
+<canvas id="matrix"></canvas>
 
-    <!-- Main Container -->
-    <main class="container">
-        <header class="header">
-            <h1 class="title">JEBKIT</h1>
-            <p class="subtitle">Nintendo Switch 2 WebKit Project</p>
-        </header>
+<div class="container">
+    <h1>JEBKIT V2</h1>
+    <div class="subtitle">WEBVIEW BOOTSTRAP INTERFACE</div>
 
-        <!-- Status & Diagnostic Dashboard -->
-        <section class="panel status-panel">
-            <div class="panel-header">System Status</div>
-            <div class="status-grid">
-                <div class="status-item">
-                    <span class="label">Environment:</span>
-                    <span class="value green" id="env-status">WebKit Sandbox</span>
-                </div>
-                <div class="status-item">
-                    <span class="label">Target OS:</span>
-                    <span class="value" id="target-os">Nintendo Switch 2</span>
-                </div>
-                <div class="status-item">
-                    <span class="label">Firmware Reference:</span>
-                    <span class="value red" id="fw-ref">23.0.1</span>
-                </div>
-                <div class="status-item">
-                    <span class="label">Status:</span>
-                    <span class="value yellow" id="system-state">Awaiting Verification</span>
-                </div>
-            </div>
-            <div class="log-box" id="console-log">
-                <div class="log-line">[SYS] Jebkit WebKit interface loaded successfully.</div>
-                <div class="log-line">[SYS] Engine components mapped to WebKit sandbox.</div>
-                <div class="log-line">[WARN] Firmware auto-detection disabled (sandbox isolation).</div>
-            </div>
-        </section>
+    <label for="host">HOST ADDRESS</label>
+    <input id="host" type="text" value="127.0.0.1">
 
-        <!-- Action Controls -->
-        <div class="action-bar">
-            <button class="btn btn-primary" id="btn-verify">Verify System Firmware</button>
-            <button class="btn btn-secondary" id="btn-info">Architecture Overview</button>
-        </div>
-    </main>
+    <label for="port">WEBSOCKET PORT</label>
+    <input id="port" type="number" value="8080">
 
-    <!-- Firmware Reminder Modal -->
-    <div class="modal-backdrop hidden" id="fw-modal">
-        <div class="modal-content panel red-glow">
-            <h2 class="modal-title">Firmware Verification</h2>
-            <div class="modal-body">
-                <p>Please check your current system firmware version in <strong>System Settings</strong> on your device.</p>
-                <div class="info-card">
-                    <span class="info-label">Firmware Reference:</span>
-                    <span class="info-value">23.0.1</span>
-                </div>
-                <p class="note-text">Ensure your device configuration matches expected WebKit browser compatibility requirements.</p>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
-                <button class="btn btn-primary disabled" id="modal-ok" disabled>OK (<span id="timer-countdown">5</span>s)</button>
-            </div>
-        </div>
+    <div class="buttons">
+        <button onclick="boot()">BOOT</button>
+        <button onclick="start()">START</button>
+        <button onclick="ping()">PING / RPC</button>
+        <button onclick="stop()">STOP</button>
     </div>
 
-    <!-- Architecture Info Modal -->
-    <div class="modal-backdrop hidden" id="info-modal">
-        <div class="modal-content panel">
-            <h2 class="modal-title">Jebkit Architecture</h2>
-            <div class="modal-body text-left">
-                <p><strong>Separation of Concerns:</strong></p>
-                <ul>
-                    <li><strong class="red">Native Core:</strong> Low-level memory pointers, binary payloads, and kernel IPC functions are isolated from browser execution.</li>
-                    <li><strong class="green">WebKit Layer:</strong> Provides lightweight, responsive visual user interfaces, diagnostic logs, and status dashboards safely within browser sandbox limits.</li>
-                </ul>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="info-close">Close</button>
-            </div>
-        </div>
+    <div class="status" id="status">
+        STATUS: STANDBY
     </div>
 
-    <script src="app.js"></script>
+    <div id="console">[JEBKIT V2] Interface initialized.</div>
+
+    <div class="footer">
+        JEBKIT V2 — RGB MATRIX INTERFACE
+    </div>
+</div>
+
+<script>
+// =====================================
+// RGB COLOR CYCLE
+// =====================================
+
+let hue = 0;
+
+function updateRGB() {
+    hue = (hue + 1) % 360;
+
+    document.documentElement.style.setProperty(
+        "--rgb",
+        `hsl(${hue}, 100%, 50%)`
+    );
+}
+
+setInterval(updateRGB, 25);
+
+
+// =====================================
+// MATRIX BACKGROUND
+// =====================================
+
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+let columns;
+let drops;
+const fontSize = 14;
+
+function resizeMatrix() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    columns = Math.floor(canvas.width / fontSize);
+    drops = Array(columns).fill(1);
+}
+
+window.addEventListener("resize", resizeMatrix);
+resizeMatrix();
+
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = fontSize + "px monospace";
+
+    const color = `hsl(${hue}, 100%, 50%)`;
+    ctx.fillStyle = color;
+
+    for (let i = 0; i < drops.length; i++) {
+        const character = Math.random() > 0.5 ? "1" : "0";
+
+        ctx.fillText(
+            character,
+            i * fontSize,
+            drops[i] * fontSize
+        );
+
+        if (
+            drops[i] * fontSize > canvas.height &&
+            Math.random() > 0.975
+        ) {
+            drops[i] = 0;
+        }
+
+        drops[i]++;
+    }
+}
+
+setInterval(drawMatrix, 40);
+
+
+// =====================================
+// JEBKIT V2 CORE
+// =====================================
+
+let socket = null;
+let booted = false;
+let connected = false;
+
+const statusBox = document.getElementById("status");
+const consoleBox = document.getElementById("console");
+
+function log(message) {
+    const time = new Date().toLocaleTimeString();
+
+    consoleBox.textContent +=
+        `\n[${time}] ${message}`;
+
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+}
+
+function setStatus(message) {
+    statusBox.textContent = "STATUS: " + message;
+}
+
+
+// =====================================
+// BOOT
+// =====================================
+
+function boot() {
+    log("BOOT sequence initiated.");
+
+    try {
+        // Browser-side simulation only.
+        const memory = new ArrayBuffer(256);
+        const view = new Uint8Array(memory);
+
+        view[0] = 0x4A;
+        view[1] = 0x45;
+        view[2] = 0x42;
+        view[3] = 0x4B;
+
+        const signature =
+            view[0] === 0x4A &&
+            view[1] === 0x45 &&
+            view[2] === 0x42 &&
+            view[3] === 0x4B;
+
+        if (!signature || memory.byteLength !== 256) {
+            throw new Error("Validation failed.");
+        }
+
+        booted = true;
+
+        log("Buffer allocated.");
+        log("Signature validation passed.");
+        log("BOOT completed successfully.");
+
+        setStatus("BOOT COMPLETE");
+    } catch (error) {
+        booted = false;
+
+        log("BOOT ERROR: " + error.message);
+        setStatus("BOOT FAILED");
+    }
+}
+
+
+// =====================================
+// START
+// =====================================
+
+function start() {
+    if (!booted) {
+        log("ERROR: Run BOOT first.");
+        return;
+    }
+
+    if (connected) {
+        log("Connection already active.");
+        return;
+    }
+
+    const host = document.getElementById("host").value.trim();
+    const port = document.getElementById("port").value.trim();
+
+    if (!host || !port || Number(port) < 1 || Number(port) > 65535) {
+        log("ERROR: Invalid host or port.");
+        return;
+    }
+
+    const address = `ws://${host}:${port}`;
+
+    log("Connecting to " + address);
+
+    try {
+        socket = new WebSocket(address);
+
+        socket.onopen = function() {
+            connected = true;
+
+            setStatus("CONNECTED");
+            log("WebSocket connection established.");
+
+            socket.send(JSON.stringify({
+                type: "JEBKIT_V2_HELLO",
+                version: "2.0",
+                timestamp: Date.now()
+            }));
+
+            log("JEBKIT V2 handshake sent.");
+        };
+
+        socket.onmessage = function(event) {
+            log("RPC RESPONSE: " + event.data);
+        };
+
+        socket.onerror = function() {
+            log("WebSocket connection error.");
+            setStatus("CONNECTION ERROR");
+        };
+
+        socket.onclose = function() {
+            connected = false;
+            log("Connection closed.");
+            setStatus("DISCONNECTED");
+        };
+
+    } catch (error) {
+        log("START ERROR: " + error.message);
+        setStatus("START FAILED");
+    }
+}
+
+
+// =====================================
+// RPC PING
+// =====================================
+
+function ping() {
+    if (!connected || !socket || socket.readyState !== WebSocket.OPEN) {
+        log("ERROR: No active connection.");
+        return;
+    }
+
+    const packet = {
+        type: "RPC",
+        method: "PING",
+        id: Date.now(),
+        timestamp: new Date().toISOString()
+    };
+
+    socket.send(JSON.stringify(packet));
+
+    log("RPC PING transmitted.");
+}
+
+
+// =====================================
+// STOP
+// =====================================
+
+function stop() {
+    if (socket) {
+        socket.close();
+        socket = null;
+    }
+
+    connected = false;
+    booted = false;
+
+    setStatus("STOPPED");
+    log("JEBKIT V2 stopped.");
+}
+
+</script>
 </body>
 </html>
